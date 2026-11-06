@@ -1,0 +1,69 @@
+name: Deploy backend to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      TEST_PROJECT_PATH: tests/backend.Tests/backend.Tests.csproj
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore test dependencies
+        run: dotnet restore $TEST_PROJECT_PATH
+
+      - name: Run unit tests
+        run: dotnet test $TEST_PROJECT_PATH --configuration Release --no-restore
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_PATH: backend/backend.csproj
+      PUBLISH_DIR: backend/publish
+      AZURE_WEBAPP_NAME: gh200-backend-george
+      AZURE_WEBAPP_PACKAGE_PATH: backend/publish
+
+    needs: test
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore $PROJECT_PATH
+
+      - name: Build app
+        run: dotnet build $PROJECT_PATH --configuration Release --no-restore
+
+      - name: Publish app
+        run: dotnet publish $PROJECT_PATH --configuration Release --no-build --output $PUBLISH_DIR
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
