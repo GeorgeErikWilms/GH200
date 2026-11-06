@@ -35,7 +35,7 @@ public class HelloEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     {
         var json = await _client.GetFromJsonAsync<JsonElement>("/api/hello");
 
-        Assert.Equal("Hello from GH200 backent!", json.GetProperty("message").GetString());
+        Assert.Equal("Hello from GH200 backend!", json.GetProperty("message").GetString());
     }
 
     [Fact]
