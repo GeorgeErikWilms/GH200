@@ -30,3 +30,6 @@ app.MapGet("/api/hello", () => Results.Ok(new
 app.MapControllers();
 
 app.Run();
+
+// Exposes the entry point to WebApplicationFactory in the test project.
+public partial class Program { }
